@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AppProvider, useApp } from './contexts/AppContext'
 import { Header } from './components/layout/Header'
 import AppShell from './components/layout/AppShell'
@@ -10,32 +10,36 @@ function AppInner() {
   const { state, dispatch } = useApp()
   const { handleAuthError } = useTwitchAuth()
   const [channelToLoad, setChannelToLoad] = useState<string | null>(null)
+  const lastProcessedUrl = useRef<string>('')
+
+  const authErrorHandler = useCallback(
+    () => handleAuthError(null),
+    [handleAuthError],
+  )
 
   // When a Twitch channel URL is played, extract channel name and load data
   useEffect(() => {
-    const { detection } = state.player
-    if (!detection) return
+    const { detection, currentUrl } = state.player
+    if (!detection || !currentUrl || currentUrl === lastProcessedUrl.current) return
+
+    lastProcessedUrl.current = currentUrl
 
     if (detection.type === 'twitch' && detection.metadata?.channelName) {
       setChannelToLoad(detection.metadata.channelName)
+    } else if (
+      detection.type === 'unknown' &&
+      !currentUrl.includes('.') &&
+      !currentUrl.includes('/') &&
+      !currentUrl.includes(':')
+    ) {
+      // Plain channel name entered
+      setChannelToLoad(currentUrl)
+      const twitchDetection = detectURLType(`https://twitch.tv/${currentUrl}`)
+      dispatch({ type: 'PLAY_URL', url: `https://twitch.tv/${currentUrl}`, detection: twitchDetection })
     }
-  }, [state.player.detection])
+  }, [state.player.detection, state.player.currentUrl, dispatch])
 
-  // Also handle plain text channel name submissions (from SmartUrlInput)
-  useEffect(() => {
-    const url = state.player.currentUrl
-    if (!url) return
-
-    // If the URL doesn't look like a URL, it's a plain channel name
-    if (!url.includes('.') && !url.includes('/') && !url.includes(':')) {
-      setChannelToLoad(url)
-      // Also set up the detection for the player
-      const detection = detectURLType(`https://twitch.tv/${url}`)
-      dispatch({ type: 'PLAY_URL', url, detection })
-    }
-  }, [state.player.currentUrl, dispatch])
-
-  useChannelData(channelToLoad, { handleAuthError: () => handleAuthError(null) })
+  useChannelData(channelToLoad, { handleAuthError: authErrorHandler })
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
 
 :root {
   --bg: #0a0a0a;
@@ -23,14 +24,6 @@
   --font-heading: 'Orbitron', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-body: system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
-}
-
-@font-face {
-  font-family: 'Orbitron';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
 }
 
 * {

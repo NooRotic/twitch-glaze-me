@@ -31,7 +31,7 @@ export function detectURLType(url: string): URLDetectionResult {
     return { type: 'hls', originalUrl: url, playableUrl: url }
   }
 
-  if (cleanUrl.includes('.mpd') || cleanUrl.includes('dash')) {
+  if (cleanUrl.includes('.mpd')) {
     return { type: 'dash', originalUrl: url, playableUrl: url }
   }
 
