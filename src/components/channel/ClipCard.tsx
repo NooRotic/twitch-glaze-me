@@ -26,8 +26,9 @@ export default function ClipCard({ clip, game }: ClipCardProps) {
     : null
 
   const handleClick = () => {
-    const detection = detectURLType(clip.embed_url)
-    dispatch({ type: 'PLAY_URL', url: clip.embed_url, detection })
+    const clipUrl = `https://clips.twitch.tv/${clip.id}`
+    const detection = detectURLType(clipUrl)
+    dispatch({ type: 'PLAY_URL', url: clipUrl, detection })
   }
 
   return (

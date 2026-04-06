@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { Settings } from 'lucide-react'
 import type { URLDetectionResult, PlayerEngine } from '../../lib/urlDetection'
 import { getRecommendedEngine, getURLTypeDisplayName } from '../../lib/urlDetection'
@@ -61,6 +61,15 @@ export default function PlayerHost({ url, detection }: PlayerHostProps) {
   const [fallbackStep, setFallbackStep] = useState(0)
   const [activeEngine, setActiveEngine] = useState<PlayerEngine>(initialEngine)
   const [errorReason, setErrorReason] = useState<string | null>(null)
+
+  // Reset fallback state when URL or detection changes
+  useEffect(() => {
+    const engine = getRecommendedEngine(detection)
+    setFallbackStep(0)
+    setActiveEngine(engine)
+    setErrorReason(null)
+    dispatch({ type: 'SET_ENGINE', engine, fallbackStep: 0 })
+  }, [url, detection, dispatch])
 
   const advanceFallback = useCallback(
     (error: string) => {
