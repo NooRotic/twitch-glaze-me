@@ -107,11 +107,10 @@ export function useChannelData(
         setLoading(false)
       }
     },
-    // Depend on the stable callback inside options, not the wrapper object —
-    // callers typically pass a new `{ handleAuthError }` object each render,
-    // which would otherwise rebuild `fetchData` every render and trigger a
+    // Callers are expected to memoize the `options` object (see App.tsx).
+    // Without that, this callback would rebuild every render and trigger a
     // re-fetch storm via the effect below.
-    [dispatch, options?.handleAuthError],
+    [dispatch, options],
   )
 
   const refetch = useCallback(() => {

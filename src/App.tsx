@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppProvider, useApp } from './contexts/AppContext'
 import { Header } from './components/layout/Header'
 import AppShell from './components/layout/AppShell'
@@ -52,9 +52,15 @@ function AppInner() {
     }
   }, [state.player.currentUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Only fetch channel data when authenticated
+  // Only fetch channel data when authenticated. Memoize the options object
+  // so useChannelData can depend on it stably (without a new reference on
+  // every render causing fetchData to rebuild and re-fire the effect).
   const channelForApi = isAuthenticated ? channelToLoad : null
-  useChannelData(channelForApi, { handleAuthError: authErrorHandler })
+  const channelDataOptions = useMemo(
+    () => ({ handleAuthError: authErrorHandler }),
+    [authErrorHandler],
+  )
+  useChannelData(channelForApi, channelDataOptions)
 
   // Onboarding intro handlers
   const handleOnboardingComplete = useCallback(() => {
