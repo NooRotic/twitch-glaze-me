@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppProvider, useApp } from './contexts/AppContext'
 import { Header } from './components/layout/Header'
 import AppShell from './components/layout/AppShell'
+import FollowingPanel from './components/layout/FollowingPanel'
 import ShaderBackground from './components/ui/ShaderBackground'
 import { ChannelIntro } from './components/intro/ChannelIntro'
 import { OnboardingIntro } from './components/intro/OnboardingIntro'
@@ -10,6 +11,7 @@ import { useChannelData } from './hooks/useChannelData'
 import { useTwitchAuth } from './hooks/useTwitchAuth'
 import { useIntroState } from './hooks/useIntroState'
 import { detectURLType } from './lib/urlDetection'
+import { getAuthenticatedUser, SessionExpiredError } from './lib/twitchApi'
 
 const ONBOARDING_SEEN_KEY = 'glaze_onboarding_seen'
 
@@ -62,6 +64,29 @@ function AppInner() {
   )
   useChannelData(channelForApi, channelDataOptions)
 
+  // Fetch the authenticated user's own profile once after login. Any
+  // component that needs the logged-in user's id/display_name/broadcaster_type
+  // (e.g. Following panel, user stats) reads from state.auth.user.
+  const authUserLoaded = state.auth.user !== null
+  useEffect(() => {
+    if (!isAuthenticated || authUserLoaded) return
+    let cancelled = false
+    getAuthenticatedUser()
+      .then((user) => {
+        if (!cancelled) dispatch({ type: 'LOGIN_USER_LOADED', user })
+      })
+      .catch((err) => {
+        if (err instanceof SessionExpiredError) {
+          handleAuthError(err)
+        }
+        // Non-session errors are silent here — downstream consumers will
+        // show their own error states if they actually need this data.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated, authUserLoaded, dispatch, handleAuthError])
+
   // Onboarding intro handlers
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem(ONBOARDING_SEEN_KEY, '1')
@@ -100,6 +125,10 @@ function AppInner() {
       )}
 
       <Header />
+
+      {/* Slide-down panel sits fixed below the header. z-9 < header z-10 so
+          the header visually covers the top edge as it translates. */}
+      <FollowingPanel />
 
       {/* No z-index here: Header's z-10 must win over AppShell in the sibling
           stacking comparison so the SmartUrlInput dropdown paints above main
