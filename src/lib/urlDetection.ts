@@ -10,7 +10,13 @@ export interface URLDetectionResult {
   }
 }
 
-export type PlayerEngine = 'twitch-sdk' | 'twitch-iframe' | 'videojs' | 'dashjs' | 'reactplayer' | 'fallback'
+export type PlayerEngine =
+  | 'twitch-sdk'
+  | 'twitch-iframe'
+  | 'videojs'
+  | 'dashjs'
+  | 'reactplayer'
+  | 'fallback'
 
 export function detectURLType(url: string): URLDetectionResult {
   if (!url || typeof url !== 'string') {
@@ -44,7 +50,11 @@ export function detectURLType(url: string): URLDetectionResult {
 
 export function isTwitchURL(url: string): boolean {
   const cleanUrl = url.toLowerCase()
-  return cleanUrl.includes('twitch.tv') || cleanUrl.includes('clips.twitch.tv') || cleanUrl.includes('m.twitch.tv')
+  return (
+    cleanUrl.includes('twitch.tv') ||
+    cleanUrl.includes('clips.twitch.tv') ||
+    cleanUrl.includes('m.twitch.tv')
+  )
 }
 
 export function isYouTubeURL(url: string): boolean {
@@ -108,12 +118,8 @@ export function detectTwitchURL(url: string): URLDetectionResult {
  * Streams and VODs use `player.twitch.tv/?channel=` or `?video=v<id>`.
  * See https://dev.twitch.tv/docs/embed/video-and-clips/ for format spec.
  */
-export function buildTwitchEmbedUrl(
-  detection: URLDetectionResult,
-  parent?: string,
-): string | null {
-  const hostname =
-    parent || (typeof window !== 'undefined' ? window.location.hostname : '')
+export function buildTwitchEmbedUrl(detection: URLDetectionResult, parent?: string): string | null {
+  const hostname = parent || (typeof window !== 'undefined' ? window.location.hostname : '')
   if (!hostname) return null
 
   if (detection.platform === 'twitch-clip' && detection.metadata?.clipId) {
@@ -132,10 +138,7 @@ export function buildTwitchEmbedUrl(
       parent: hostname,
     })
     return `${base}?${params.toString()}`
-  } else if (
-    detection.platform === 'twitch-stream' &&
-    detection.metadata?.channelName
-  ) {
+  } else if (detection.platform === 'twitch-stream' && detection.metadata?.channelName) {
     const params = new URLSearchParams({
       channel: detection.metadata.channelName,
       parent: hostname,
@@ -150,16 +153,25 @@ export function getURLTypeDisplayName(result: URLDetectionResult): string {
   switch (result.type) {
     case 'twitch':
       switch (result.platform) {
-        case 'twitch-clip': return 'Twitch Clip'
-        case 'twitch-video': return 'Twitch VOD'
-        case 'twitch-stream': return 'Twitch Stream'
-        default: return 'Twitch'
+        case 'twitch-clip':
+          return 'Twitch Clip'
+        case 'twitch-video':
+          return 'Twitch VOD'
+        case 'twitch-stream':
+          return 'Twitch Stream'
+        default:
+          return 'Twitch'
       }
-    case 'youtube': return 'YouTube'
-    case 'hls': return 'HLS Stream'
-    case 'dash': return 'DASH Stream'
-    case 'mp4': return 'MP4 Video'
-    default: return 'Unknown'
+    case 'youtube':
+      return 'YouTube'
+    case 'hls':
+      return 'HLS Stream'
+    case 'dash':
+      return 'DASH Stream'
+    case 'mp4':
+      return 'MP4 Video'
+    default:
+      return 'Unknown'
   }
 }
 
@@ -185,10 +197,14 @@ export function getRecommendedEngine(result: URLDetectionResult): PlayerEngine {
  */
 export function getSourceColor(result: URLDetectionResult): string {
   switch (result.type) {
-    case 'twitch': return 'var(--accent-twitch)'
-    case 'youtube': return 'var(--accent-youtube)'
+    case 'twitch':
+      return 'var(--accent-twitch)'
+    case 'youtube':
+      return 'var(--accent-youtube)'
     case 'hls':
-    case 'dash': return 'var(--accent-hls)'
-    default: return 'var(--text-muted)'
+    case 'dash':
+      return 'var(--accent-hls)'
+    default:
+      return 'var(--text-muted)'
   }
 }

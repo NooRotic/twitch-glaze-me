@@ -210,29 +210,21 @@ describe('getURLTypeDisplayName', () => {
 
 describe('buildTwitchEmbedUrl - clips use clips.twitch.tv host', () => {
   it('produces a clips.twitch.tv/embed URL for clip detections', () => {
-    const detection = detectURLType(
-      'https://clips.twitch.tv/AbcDef123SlugXyz',
-    )
+    const detection = detectURLType('https://clips.twitch.tv/AbcDef123SlugXyz')
     const url = buildTwitchEmbedUrl(detection, 'example.com')
-    expect(url).toBe(
-      'https://clips.twitch.tv/embed?clip=AbcDef123SlugXyz&parent=example.com',
-    )
+    expect(url).toBe('https://clips.twitch.tv/embed?clip=AbcDef123SlugXyz&parent=example.com')
   })
 
   it('uses player.twitch.tv for VOD detections', () => {
     const detection = detectURLType('https://twitch.tv/videos/123456789')
     const url = buildTwitchEmbedUrl(detection, 'example.com')
-    expect(url).toBe(
-      'https://player.twitch.tv/?video=v123456789&parent=example.com',
-    )
+    expect(url).toBe('https://player.twitch.tv/?video=v123456789&parent=example.com')
   })
 
   it('uses player.twitch.tv for live stream detections', () => {
     const detection = detectURLType('https://twitch.tv/ninja')
     const url = buildTwitchEmbedUrl(detection, 'example.com')
-    expect(url).toBe(
-      'https://player.twitch.tv/?channel=ninja&parent=example.com',
-    )
+    expect(url).toBe('https://player.twitch.tv/?channel=ninja&parent=example.com')
   })
 })
 
