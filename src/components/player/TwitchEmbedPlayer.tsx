@@ -226,16 +226,11 @@ export default function TwitchEmbedPlayer({
               })
             }
           } catch {
-            // Non-fatal: player-level events simply won't fire.
+            handleError('Twitch Player API unavailable')
+            return
           }
 
           onReady?.()
-        })
-
-        // Embed-level VIDEO_PLAY also fires once on the first playthrough.
-        // (The Player-level PLAY handles subsequent play-after-pause.)
-        embed.addEventListener(Embed.VIDEO_PLAY, () => {
-          if (mountedRef.current) onPlay?.()
         })
       } catch (err) {
         clearTimeoutSafe()
