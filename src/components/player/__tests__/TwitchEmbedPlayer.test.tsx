@@ -317,7 +317,7 @@ describe('TwitchEmbedPlayer', () => {
     )
   })
 
-  it('fires onError after 5s if VIDEO_READY never arrives', async () => {
+  it('fires onError after 15s if VIDEO_READY never arrives', async () => {
     const onError = vi.fn()
     render(
       <TwitchEmbedPlayer
@@ -326,16 +326,18 @@ describe('TwitchEmbedPlayer', () => {
         onError={onError}
       />,
     )
-    // Flush the async init (microtasks only) without firing the 5s timer.
-    await vi.advanceTimersByTimeAsync(0)
+    // Flush waitForPaint (2x requestAnimationFrame ≈ 32ms) + async script
+    // load microtasks without firing the 15s timeout.
+    await vi.advanceTimersByTimeAsync(100)
     expect(onError).not.toHaveBeenCalled()
-    vi.advanceTimersByTime(5000)
+    // Now advance past the 15s budget to trigger the timeout.
+    vi.advanceTimersByTime(15000)
     expect(onError).toHaveBeenCalledWith(
       expect.stringContaining('timed out'),
     )
   })
 
-  it('does NOT fire onError after VIDEO_READY even if 5s elapses', async () => {
+  it('does NOT fire onError after VIDEO_READY even if 20s elapses', async () => {
     const onError = vi.fn()
     const onReady = vi.fn()
     render(
@@ -346,10 +348,11 @@ describe('TwitchEmbedPlayer', () => {
         onReady={onReady}
       />,
     )
-    // Flush the async init (microtasks only) without firing the 5s timer.
-    await vi.advanceTimersByTimeAsync(0)
+    // Flush waitForPaint RAFs so `new Embed` has run and embedInstances[0]
+    // exists. 100ms covers the two RAFs without tripping the 15s timeout.
+    await vi.advanceTimersByTimeAsync(100)
     embedInstances[0].__fire('video.ready')
-    vi.advanceTimersByTime(10000)
+    vi.advanceTimersByTime(20000)
     expect(onReady).toHaveBeenCalledTimes(1)
     expect(onError).not.toHaveBeenCalled()
   })

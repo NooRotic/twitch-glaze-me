@@ -31,7 +31,16 @@ interface TwitchPlayerInstance {
 }
 
 const TWITCH_EMBED_SCRIPT = 'https://embed.twitch.tv/embed/v1.js'
-const EMBED_TIMEOUT_MS = 5000
+// Longer than the iframe-level timeout on purpose: Twitch's embed gates
+// VIDEO_READY on its internal autoplay visibility checks, which retry over
+// several seconds on localhost. 15s covers the retry loop + StrictMode's
+// mount/cleanup/mount double-invoke without killing a working player.
+const EMBED_TIMEOUT_MS = 15000
+// If the iframe's DOM `load` event fires but VIDEO_READY hasn't arrived
+// within this grace window, we treat the iframe's presence as proof the
+// SDK is working and call onReady ourselves. This is the backup signal
+// for the known-broken "autoplay blocked by style visibility" case.
+const IFRAME_LOAD_GRACE_MS = 3000
 
 // Player-level event names (fired on Twitch.Player from embed.getPlayer()).
 // Per https://dev.twitch.tv/docs/embed/video-and-clips/ these are string
@@ -125,23 +134,38 @@ export default function TwitchEmbedPlayer({
     const embedId = embedIdRef.current
     container.id = embedId
 
-    // Start the timeout BEFORE async work so the 5s budget covers the full
+    // Start the timeout BEFORE async work so the budget covers the full
     // init path (script load + Embed construction + VIDEO_READY).
     let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(
       () => {
         if (mountedRef.current) {
-          handleError('Twitch Embed timed out after 5s')
+          handleError(
+            `Twitch Embed timed out after ${EMBED_TIMEOUT_MS / 1000}s`,
+          )
         }
       },
       EMBED_TIMEOUT_MS,
     )
+    let iframeLoadGraceId: ReturnType<typeof setTimeout> | undefined
 
     const clearTimeoutSafe = () => {
       if (timeoutId !== undefined) {
         clearTimeout(timeoutId)
         timeoutId = undefined
       }
+      if (iframeLoadGraceId !== undefined) {
+        clearTimeout(iframeLoadGraceId)
+        iframeLoadGraceId = undefined
+      }
     }
+
+    // Wait until the browser has painted the container so the Twitch SDK's
+    // autoplay "style visibility" check runs against real dimensions, not
+    // a zero-size pre-layout element. Double-RAF = one commit + one paint.
+    const waitForPaint = () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      })
 
     const init = async () => {
       try {
@@ -152,6 +176,11 @@ export default function TwitchEmbedPlayer({
         return
       }
 
+      if (!mountedRef.current || !window.Twitch?.Embed) return
+
+      // Give the container one paint cycle so Twitch's autoplay visibility
+      // check sees real dimensions, not a zero-size pre-layout element.
+      await waitForPaint()
       if (!mountedRef.current || !window.Twitch?.Embed) return
 
       const Embed = window.Twitch.Embed
@@ -184,54 +213,76 @@ export default function TwitchEmbedPlayer({
         return
       }
 
+      // Idempotent ready path: two sources can race to call this —
+      // (1) Twitch's VIDEO_READY event, (2) the iframe DOM `load` event
+      // backup for the "autoplay style visibility" gate. Whichever wins,
+      // subsequent calls are no-ops.
+      let readyFired = false
+      const fireReady = (embed: TwitchEmbedInstance) => {
+        if (readyFired || !mountedRef.current) return
+        readyFired = true
+        clearTimeoutSafe()
+
+        try {
+          const player = embed.getPlayer()
+          playerRef.current = player
+
+          player.addEventListener(PLAYER_EVT.PAUSE, () => {
+            if (mountedRef.current) onPause?.()
+          })
+          player.addEventListener(PLAYER_EVT.PLAY, () => {
+            if (mountedRef.current) onPlay?.()
+          })
+          player.addEventListener(PLAYER_EVT.ENDED, () => {
+            if (mountedRef.current) onEnded?.()
+          })
+          player.addEventListener(PLAYER_EVT.PLAYBACK_BLOCKED, () => {
+            if (mountedRef.current) {
+              onPlaybackBlocked?.()
+              // Autoplay was blocked by the browser. Advance the chain so
+              // the user at least sees an actionable fallback.
+              handleError('Autoplay blocked by browser')
+            }
+          })
+          // OFFLINE / ONLINE are only meaningful for live streams.
+          if (detection.platform === 'twitch-stream') {
+            player.addEventListener(PLAYER_EVT.OFFLINE, () => {
+              if (mountedRef.current) onOffline?.()
+            })
+            player.addEventListener(PLAYER_EVT.ONLINE, () => {
+              if (mountedRef.current) onOnline?.()
+            })
+          }
+        } catch {
+          handleError('Twitch Player API unavailable')
+          return
+        }
+
+        onReady?.()
+      }
+
       try {
         const embed = new Embed(embedId, options)
         embedRef.current = embed
 
-        embed.addEventListener(Embed.VIDEO_READY, () => {
-          if (!mountedRef.current) return
-          clearTimeoutSafe()
+        // Primary ready signal: Twitch's own event.
+        embed.addEventListener(Embed.VIDEO_READY, () => fireReady(embed))
 
-          // Now that VIDEO_READY has fired, the underlying Player exists.
-          // Attach the real event listeners to it.
-          try {
-            const player = embed.getPlayer()
-            playerRef.current = player
-
-            player.addEventListener(PLAYER_EVT.PAUSE, () => {
-              if (mountedRef.current) onPause?.()
-            })
-            player.addEventListener(PLAYER_EVT.PLAY, () => {
-              if (mountedRef.current) onPlay?.()
-            })
-            player.addEventListener(PLAYER_EVT.ENDED, () => {
-              if (mountedRef.current) onEnded?.()
-            })
-            player.addEventListener(PLAYER_EVT.PLAYBACK_BLOCKED, () => {
-              if (mountedRef.current) {
-                onPlaybackBlocked?.()
-                // Autoplay was blocked by the browser. Treat this as an error
-                // so the host advances to the iframe engine (which also
-                // requires a click, but at least the user knows).
-                handleError('Autoplay blocked by browser')
-              }
-            })
-            // OFFLINE / ONLINE are only meaningful for live streams.
-            if (detection.platform === 'twitch-stream') {
-              player.addEventListener(PLAYER_EVT.OFFLINE, () => {
-                if (mountedRef.current) onOffline?.()
-              })
-              player.addEventListener(PLAYER_EVT.ONLINE, () => {
-                if (mountedRef.current) onOnline?.()
-              })
-            }
-          } catch {
-            handleError('Twitch Player API unavailable')
-            return
-          }
-
-          onReady?.()
-        })
+        // Backup ready signal: the DOM `load` event on the iframe that
+        // Twitch's SDK just synchronously injected into our container.
+        // If VIDEO_READY is silently gated by Twitch's autoplay visibility
+        // check (common on localhost non-port-80), iframe load still fires
+        // when the player iframe finishes loading. After a short grace
+        // window, we fire ready from that signal.
+        const iframe = container.querySelector('iframe')
+        if (iframe) {
+          iframe.addEventListener('load', () => {
+            if (readyFired || !mountedRef.current) return
+            iframeLoadGraceId = setTimeout(() => {
+              if (!readyFired && mountedRef.current) fireReady(embed)
+            }, IFRAME_LOAD_GRACE_MS)
+          })
+        }
       } catch (err) {
         clearTimeoutSafe()
         handleError(
