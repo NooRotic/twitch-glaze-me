@@ -95,7 +95,10 @@ function AppInner() {
 
       <Header />
 
-      <div className="relative z-10">
+      {/* No z-index here: Header's z-10 must win over AppShell in the sibling
+          stacking comparison so the SmartUrlInput dropdown paints above main
+          content. `relative` stays for RemixButton's absolute positioning. */}
+      <div className="relative">
         {state.channel.profile && !showChannelIntro && !showOnboarding && (
           <div className="absolute top-2 right-6 z-20">
             <RemixButton onRemix={intro.triggerRemix} />

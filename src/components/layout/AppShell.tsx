@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
-import { Loader2, X, Tv, Search } from 'lucide-react'
+import { Loader2, X, Tv } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
 import PlayerHost from '../player/PlayerHost'
 import ProfileSidebar from '../channel/ProfileSidebar'
 import StatsRow from '../channel/StatsRow'
 import ClipGrid from '../channel/ClipGrid'
 import VODGrid from '../channel/VODGrid'
+import { SmartUrlInput } from '../search/SmartUrlInput'
 
 function IdleView() {
   return (
@@ -39,17 +40,11 @@ function IdleView() {
         everything that makes a streamer who they are.
       </p>
 
-      <div
-        className="animate-reveal animate-reveal-4 flex items-center gap-3 px-5 py-2.5 rounded-lg animate-border-glow"
-        style={{
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-        }}
-      >
-        <Search size={14} style={{ color: 'var(--accent-twitch)' }} />
-        <span className="text-label" style={{ color: 'var(--text-muted)' }}>
-          Search a channel to get started
-        </span>
+      {/* Real input — replaces the old decorative badge. Renders a second
+          SmartUrlInput instance alongside the Header one; the Header copy
+          takes over after displayMode flips out of 'idle'. */}
+      <div className="animate-reveal animate-reveal-4 w-full max-w-xl">
+        <SmartUrlInput />
       </div>
 
       {/* Subtle feature hints */}
@@ -135,14 +130,27 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 function ChannelLayout() {
   const { state } = useApp()
   const { player } = state
+  const currentUrl = player.currentUrl
+
+  // Scroll the player back into view whenever the user picks a new clip/VOD
+  // or pastes a URL. Watches the URL string so any source of change (cards,
+  // SmartUrlInput, QuickLinks) triggers the same scroll behavior in one place.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentUrl])
 
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top row: Player + ProfileSidebar */}
       <div className="flex flex-col md:flex-row gap-4 w-full">
-        {/* Player area */}
+        {/* Player area.
+            No `overflow-hidden` — Twitch's autoplay "style visibility"
+            check in the Embed SDK is triggered by clipping ancestors in
+            some cases. The rounded corners are applied via `border-radius`
+            on the inline style so the iframe's corners still look clipped
+            visually without changing the box's overflow behavior. */}
         <div
-          className="w-full md:w-[70%] aspect-video rounded-lg overflow-hidden"
+          className="w-full md:w-[70%] aspect-video rounded-lg"
           style={{
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border)',
