@@ -38,6 +38,11 @@
 
   /* Spacing rhythm */
   --space-unit: 0.5rem;
+
+  /* Header height — shared between Header component and any panel that
+     needs to position itself below the header (e.g. FollowingPanel slide-
+     down animation). Change in one place to keep layout in sync. */
+  --header-height: 56px;
 }
 
 * {
