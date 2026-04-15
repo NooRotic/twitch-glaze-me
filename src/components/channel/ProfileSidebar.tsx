@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Eye, Calendar, Gamepad2, Smile, Shield } from 'lucide-react'
+import { Eye, Calendar, Gamepad2, Smile, Shield, ExternalLink } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
 
 function formatAccountAge(createdAt: string): string {
@@ -234,11 +234,19 @@ export default function ProfileSidebar() {
         </div>
       )}
 
-      {/* Current / Last game */}
+      {/* Current / Last game — clicking opens the Twitch directory for
+          that category in a new tab. Placeholder until the in-app live-
+          streams-in-category panel lands (phase 2 follow-up). */}
       {channelInfo?.game_name && (
-        <div
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md"
+        <a
+          href={`https://www.twitch.tv/directory/category/${encodeURIComponent(
+            channelInfo.game_name,
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors hover:bg-(--border)"
           style={{ backgroundColor: 'var(--bg-card-hover)' }}
+          title={`Browse ${channelInfo.game_name} on Twitch`}
         >
           {gameBoxArt ? (
             <img
@@ -249,18 +257,26 @@ export default function ProfileSidebar() {
           ) : (
             <Gamepad2 size={16} style={{ color: 'var(--text-muted)' }} />
           )}
-          <div className="min-w-0">
-            <span className="text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          <div className="min-w-0 flex-1">
+            <span
+              className="text-[11px] uppercase tracking-wider"
+              style={{ color: 'var(--text-muted)' }}
+            >
               {isLive ? 'Playing' : 'Last Played'}
             </span>
             <p
-              className="text-base font-medium truncate"
+              className="text-base font-medium truncate transition-colors group-hover:text-(--accent-green)"
               style={{ color: 'var(--text-primary)' }}
             >
               {channelInfo.game_name}
             </p>
           </div>
-        </div>
+          <ExternalLink
+            size={12}
+            className="shrink-0 opacity-0 transition-opacity group-hover:opacity-60"
+            style={{ color: 'var(--text-muted)' }}
+          />
+        </a>
       )}
 
       {/* Emote + Badge counts — both green for visual symmetry */}
