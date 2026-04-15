@@ -168,6 +168,37 @@ export async function getGames(ids: string[]): Promise<TwitchGame[]> {
   return data.data ?? []
 }
 
+/**
+ * Look up a game/category by its exact display name (e.g. "Just
+ * Chatting"). Returns the first match or null if none found. Used by
+ * the Category panel to resolve the ProfileSidebar game name into a
+ * game_id for /streams?game_id=X.
+ */
+export async function getGameByName(
+  name: string,
+): Promise<TwitchGame | null> {
+  const data = await twitchApiFetch<{ data: TwitchGame[] }>('games', {
+    name,
+  })
+  return data.data?.[0] ?? null
+}
+
+/**
+ * Fetch the top `first` live streams for a specific game/category.
+ * Public endpoint — no scope required. Streams are returned sorted
+ * by viewer count descending by Helix.
+ */
+export async function getStreamsByGameId(
+  gameId: string,
+  first: number = 30,
+): Promise<TwitchStream[]> {
+  const data = await twitchApiFetch<{ data: TwitchStream[] }>('streams', {
+    game_id: gameId,
+    first: String(first),
+  })
+  return data.data ?? []
+}
+
 // --- Emotes & Badges ---
 
 export async function getChatEmotes(broadcasterId: string): Promise<TwitchEmote[]> {
@@ -214,6 +245,32 @@ export async function getFollowedChannels(
     { user_id: userId, first: String(first) },
   )
   return data.data ?? []
+}
+
+/**
+ * Paginated version of getFollowedChannels. Accepts an `after` cursor
+ * and returns both the page of follows and the next cursor (if any)
+ * so callers can implement a cursor loop up to some safety cap.
+ */
+export async function getFollowedChannelsPage(
+  userId: string,
+  first: number = 100,
+  after?: string,
+): Promise<{ data: TwitchFollowedChannel[]; cursor: string | null }> {
+  const params: Record<string, string> = {
+    user_id: userId,
+    first: String(first),
+  }
+  if (after) params.after = after
+  const response = await twitchApiFetch<{
+    data: TwitchFollowedChannel[]
+    total: number
+    pagination?: { cursor?: string }
+  }>('channels/followed', params)
+  return {
+    data: response.data ?? [],
+    cursor: response.pagination?.cursor ?? null,
+  }
 }
 
 // ─── Streamer stats (phase 2.3) ──────────────────────────────────────
