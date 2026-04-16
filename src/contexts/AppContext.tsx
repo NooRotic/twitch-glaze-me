@@ -69,7 +69,7 @@ export interface AppState {
      */
     category: string | null
   }
-  displayMode: 'idle' | 'streamer' | 'chatter'
+  displayMode: 'idle' | 'streamer' | 'chatter' | 'video'
   loading: boolean
   error: string | null
 }
@@ -99,7 +99,7 @@ type Action =
   | { type: 'PLAY_URL'; url: string; detection: URLDetectionResult }
   | { type: 'SET_ENGINE'; engine: PlayerEngine; fallbackStep: number }
   | { type: 'TOGGLE_DEBUG' }
-  | { type: 'SET_DISPLAY_MODE'; mode: 'idle' | 'streamer' | 'chatter' }
+  | { type: 'SET_DISPLAY_MODE'; mode: AppState['displayMode'] }
   | { type: 'CLEAR_ERROR' }
   | { type: 'GO_HOME' }
   | { type: 'OPEN_NAV_PANEL'; panel: NavPanelId }
@@ -180,9 +180,21 @@ function appReducer(state: AppState, action: Action): AppState {
     }
     case 'LOAD_CHANNEL_ERROR':
       return { ...state, loading: false, error: action.error }
-    case 'PLAY_URL':
+    case 'PLAY_URL': {
+      // For non-Twitch URLs (youtube, hls, dash, direct) and Twitch
+      // clips/VODs pasted without a channel context, flip to 'video'
+      // mode so PlayerHost renders in a standalone layout. Twitch
+      // stream URLs with a channelName stay on the existing path:
+      // App.tsx triggers useChannelData → LOAD_CHANNEL_SUCCESS sets
+      // displayMode to 'streamer'/'chatter'.
+      const det = action.detection
+      const isTwitchWithChannel =
+        det.type === 'twitch' && !!det.metadata?.channelName
+      const nextDisplayMode =
+        isTwitchWithChannel ? state.displayMode : 'video'
       return {
         ...state,
+        displayMode: nextDisplayMode,
         player: {
           ...state.player,
           currentUrl: action.url,
@@ -190,6 +202,7 @@ function appReducer(state: AppState, action: Action): AppState {
           fallbackStep: 0,
         },
       }
+    }
     case 'SET_ENGINE':
       return {
         ...state,

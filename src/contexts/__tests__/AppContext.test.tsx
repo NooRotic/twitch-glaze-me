@@ -87,6 +87,47 @@ describe('AppContext', () => {
       )
       expect(result.current.state.player.detection).toEqual(detection)
       expect(result.current.state.player.fallbackStep).toBe(0)
+      // Twitch clip without channelName → standalone video mode
+      expect(result.current.state.displayMode).toBe('video')
+    })
+
+    it('PLAY_URL sets displayMode to video for YouTube URLs', () => {
+      const { result } = renderHook(() => useApp(), { wrapper })
+
+      act(() => {
+        result.current.dispatch({
+          type: 'PLAY_URL',
+          url: 'https://youtube.com/watch?v=abc',
+          detection: {
+            type: 'youtube' as const,
+            originalUrl: 'https://youtube.com/watch?v=abc',
+            playableUrl: 'https://youtube.com/watch?v=abc',
+          },
+        })
+      })
+
+      expect(result.current.state.displayMode).toBe('video')
+    })
+
+    it('PLAY_URL keeps displayMode for Twitch stream with channelName', () => {
+      const { result } = renderHook(() => useApp(), { wrapper })
+
+      act(() => {
+        result.current.dispatch({
+          type: 'PLAY_URL',
+          url: 'https://twitch.tv/xqc',
+          detection: {
+            type: 'twitch' as const,
+            platform: 'twitch-stream' as const,
+            originalUrl: 'https://twitch.tv/xqc',
+            playableUrl: 'https://twitch.tv/xqc',
+            metadata: { channelName: 'xqc' },
+          },
+        })
+      })
+
+      // Should stay 'idle' — displayMode is set later by LOAD_CHANNEL_SUCCESS
+      expect(result.current.state.displayMode).toBe('idle')
     })
 
     it('LOAD_CHANNEL_START sets loading true and clears error', () => {

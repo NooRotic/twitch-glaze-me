@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Loader2, X, Tv } from 'lucide-react'
 import { useApp } from '../../contexts/AppContext'
+import { getURLTypeDisplayName } from '../../lib/urlDetection'
 import PlayerHost from '../player/PlayerHost'
 import ProfileSidebar from '../channel/ProfileSidebar'
 import StatsRow from '../channel/StatsRow'
@@ -128,6 +129,67 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
   )
 }
 
+function VideoLayout() {
+  const { state } = useApp()
+  const { player } = state
+  const detection = player.detection
+  const typeLabel = detection ? getURLTypeDisplayName(detection) : ''
+
+  return (
+    <div className="flex flex-col gap-4 w-full max-w-5xl mx-auto">
+      {/* Type badge */}
+      {typeLabel && (
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded"
+            style={{
+              backgroundColor: 'rgba(57, 255, 20, 0.08)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            {typeLabel}
+          </span>
+          <span
+            className="text-xs truncate"
+            style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
+            title={player.currentUrl}
+          >
+            {player.currentUrl}
+          </span>
+        </div>
+      )}
+
+      {/* Player */}
+      <div
+        className="w-full aspect-video rounded-lg overflow-hidden"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+        }}
+      >
+        {player.currentUrl && player.detection ? (
+          <PlayerHost url={player.currentUrl} detection={player.detection} />
+        ) : (
+          <div
+            className="flex items-center justify-center w-full h-full"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Tv size={32} />
+              <span className="text-sm">No video loaded</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Debug panel */}
+      <DebugPanel />
+    </div>
+  )
+}
+
 function ChannelLayout() {
   const { state } = useApp()
   const { player } = state
@@ -221,7 +283,13 @@ export default function AppShell() {
       )}
 
       <main className="max-w-[1600px] mx-auto pt-4">
-        {state.displayMode === 'idle' ? <IdleView /> : <ChannelLayout />}
+        {state.displayMode === 'idle' ? (
+          <IdleView />
+        ) : state.displayMode === 'video' ? (
+          <VideoLayout />
+        ) : (
+          <ChannelLayout />
+        )}
       </main>
     </div>
   )
