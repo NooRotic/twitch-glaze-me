@@ -98,6 +98,7 @@ describe('isYouTubeURL', () => {
     expect(isYouTubeURL('https://youtube.com/watch?v=abc')).toBe(true)
     expect(isYouTubeURL('https://youtu.be/abc123')).toBe(true)
     expect(isYouTubeURL('https://youtube.com/live/abc123')).toBe(true)
+    expect(isYouTubeURL('https://youtube.com/shorts/abc123')).toBe(true)
   })
 
   it('returns false for non-YouTube URLs', () => {

@@ -62,7 +62,8 @@ export function isYouTubeURL(url: string): boolean {
   return (
     cleanUrl.includes('youtube.com/watch') ||
     cleanUrl.includes('youtu.be/') ||
-    cleanUrl.includes('youtube.com/live/')
+    cleanUrl.includes('youtube.com/live/') ||
+    cleanUrl.includes('youtube.com/shorts/')
   )
 }
 
