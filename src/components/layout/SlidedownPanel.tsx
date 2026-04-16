@@ -71,6 +71,12 @@ export default function SlidedownPanel({
   // Click-outside closes — but carve out the header nav button so
   // its own toggle handler runs instead. The nav button container
   // marks itself with `data-nav-trigger` for exactly this purpose.
+  //
+  // The listener is registered on the NEXT animation frame to avoid
+  // a race: the mousedown that opened the panel (e.g. clicking a
+  // QuickLink) can still be propagating when React synchronously
+  // renders and runs this effect. Deferring by one frame ensures we
+  // only catch future mousedowns, not the one that opened us.
   useEffect(() => {
     if (!isOpen) return
     const handleMouseDown = (e: MouseEvent) => {
@@ -81,8 +87,13 @@ export default function SlidedownPanel({
         close()
       }
     }
-    document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
+    const frameId = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', handleMouseDown)
+    })
+    return () => {
+      cancelAnimationFrame(frameId)
+      document.removeEventListener('mousedown', handleMouseDown)
+    }
   }, [isOpen, close])
 
   return (
@@ -91,14 +102,12 @@ export default function SlidedownPanel({
       aria-hidden={!isOpen}
       aria-label={ariaLabel}
       role="region"
-      className="brushed-metal absolute left-0 right-0 overflow-y-auto transition-transform duration-300 ease-out"
+      className="brushed-metal fixed left-0 right-0 overflow-y-auto transition-transform duration-300 ease-out"
       style={{
-        top: '100%',
+        top: 'var(--header-height, 56px)',
         minHeight: '40vh',
         maxHeight: 'calc(100vh - var(--header-height, 56px))',
-        // z-9 sits below the header (z-10) so the header visually
-        // "covers" the top edge as the panel slides out from under it.
-        zIndex: 9,
+        zIndex: 30,
         // No backgroundColor inline — brushed-metal class provides it.
         borderBottom: '1px solid var(--border)',
         boxShadow: '0 12px 32px rgba(0, 0, 0, 0.5)',
