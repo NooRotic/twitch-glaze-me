@@ -57,7 +57,7 @@ function StatCard<T>({
 
   return (
     <div
-      className={`flex flex-col gap-3 p-4 rounded-lg ${wide ? 'md:col-span-2' : ''}`}
+      className={`flex flex-col gap-1.5 p-3 rounded-lg ${wide ? 'md:col-span-2' : ''}`}
       style={{
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border)',
@@ -78,7 +78,7 @@ function StatCard<T>({
 
       {section.loading && (
         <div
-          className="flex items-center gap-2 py-2"
+          className="flex items-center gap-2 py-1"
           style={{ color: 'var(--text-muted)' }}
         >
           <Loader2
@@ -120,7 +120,7 @@ function StatCard<T>({
 function FollowerCountBody({ count }: { count: number }) {
   return (
     <p
-      className="text-3xl font-bold"
+      className="text-2xl font-bold"
       style={{
         color: 'var(--accent-green)',
         fontFamily: 'var(--font-heading)',
@@ -152,7 +152,7 @@ function SubscriberBody({ data }: { data: SubscriberBodyData }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline gap-3">
         <p
-          className="text-3xl font-bold"
+          className="text-2xl font-bold"
           style={{
             color: 'var(--accent-green)',
             fontFamily: 'var(--font-heading)',
@@ -250,7 +250,7 @@ function VIPsBody({ vips }: { vips: VIPsBodyData }) {
   return (
     <div className="flex flex-col gap-2">
       <p
-        className="text-3xl font-bold"
+        className="text-2xl font-bold"
         style={{
           color: 'var(--accent-green)',
           fontFamily: 'var(--font-heading)',
@@ -303,7 +303,7 @@ function HypeTrainsBody({ events }: { events: TwitchHypeTrainEvent[] }) {
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline gap-3">
         <p
-          className="text-3xl font-bold"
+          className="text-2xl font-bold"
           style={{
             color: 'var(--accent-green)',
             fontFamily: 'var(--font-heading)',
@@ -682,7 +682,7 @@ export default function YourStatsPanel() {
 
         {/* Stats grid */}
         {authUser && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pb-4">
             {/* Followers — shown to everyone */}
             <StatCard
               title="Followers"
