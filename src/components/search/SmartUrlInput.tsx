@@ -120,9 +120,9 @@ export function SmartUrlInput() {
 
   const handleQuickLinkSelect = useCallback(
     (gameName: string) => {
-      setInputValue(gameName)
-      dispatch({ type: 'SET_QUERY', query: gameName })
-      // Keep dropdown open so user can refine
+      dispatch({ type: 'OPEN_CATEGORY_PANEL', category: gameName })
+      setIsOpen(false)
+      inputRef.current?.blur()
     },
     [dispatch],
   )
