@@ -70,12 +70,58 @@ if (typeof document !== 'undefined') {
   })
 }
 
+// ─── Rolling history for sparkline charts ───────────────────────
+// Stores the last HISTORY_SIZE samples (60 = 60 seconds at 1Hz).
+// Each entry holds the values relevant for sparklines. Dropped
+// frames is stored as a per-second delta (the raw value is a
+// monotonic counter from playback start).
+
+const HISTORY_SIZE = 60
+
+export interface MetricsSample {
+  bitrate: number | null
+  bufferLength: number | null
+  droppedFramesDelta: number | null
+}
+
+const history: MetricsSample[] = []
+let prevDroppedFrames: number | null = null
+
+export function getMetricsHistory(): readonly MetricsSample[] {
+  return history
+}
+
+function pushHistory(metrics: PlaybackMetrics): void {
+  const droppedDelta =
+    metrics.droppedFrames !== null && prevDroppedFrames !== null
+      ? metrics.droppedFrames - prevDroppedFrames
+      : null
+  prevDroppedFrames = metrics.droppedFrames
+
+  history.push({
+    bitrate: metrics.bitrate,
+    bufferLength: metrics.bufferLength,
+    droppedFramesDelta: droppedDelta,
+  })
+  if (history.length > HISTORY_SIZE) history.shift()
+}
+
+function clearHistory(): void {
+  history.length = 0
+  prevDroppedFrames = null
+}
+
 /**
  * Replace the current metrics snapshot. Pass `null` to clear (e.g.
  * on player unmount). Notifies all subscribers synchronously.
  */
 export function setPlayerMetrics(next: PlaybackMetrics | null): void {
   current = next
+  if (next !== null) {
+    pushHistory(next)
+  } else {
+    clearHistory()
+  }
   // Skip listener notifications while the tab is hidden — saves
   // React re-renders in DebugPanel at 1Hz for no visible benefit.
   if (!tabVisible && next !== null) return
