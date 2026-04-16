@@ -210,6 +210,21 @@ export function SmartUrlInput() {
           </span>
         )}
 
+        {/* Submit button — visible when a valid URL is detected */}
+        {badgeLabel && (
+          <button
+            type="button"
+            onClick={() => handleSubmit()}
+            className="shrink-0 cursor-pointer rounded px-2 py-0.5 text-[11px] font-medium transition-colors hover:brightness-110"
+            style={{
+              backgroundColor: 'var(--accent-green)',
+              color: '#000',
+            }}
+          >
+            Go
+          </button>
+        )}
+
         {/* Clear button */}
         {inputValue && (
           <button
