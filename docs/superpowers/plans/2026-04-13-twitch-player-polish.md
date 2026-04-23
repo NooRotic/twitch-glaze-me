@@ -121,7 +121,7 @@ describe('getRecommendedEngine - clips', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- urlDetection`
+Run: `cd C:/Dev/projects/prism && npm run test -- urlDetection`
 Expected: the new tests FAIL — current code returns `https://player.twitch.tv/?clip=...` and recommends `twitch-sdk` for clips.
 
 - [ ] **Step 3: Update `buildTwitchEmbedUrl` in `src/lib/urlDetection.ts`**
@@ -195,7 +195,7 @@ export function getRecommendedEngine(result: URLDetectionResult): PlayerEngine {
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- urlDetection`
+Run: `cd C:/Dev/projects/prism && npm run test -- urlDetection`
 Expected: all urlDetection tests pass (pre-existing + new).
 
 - [ ] **Step 6: Commit**
@@ -246,7 +246,7 @@ export interface PlayerHostState {
 
 - [ ] **Step 2: Verify type-check**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npx tsc --noEmit -p tsconfig.app.json`
+Run: `cd C:/Dev/projects/prism && npx tsc --noEmit -p tsconfig.app.json`
 Expected: no new errors caused by this file.
 
 - [ ] **Step 3: Commit**
@@ -294,7 +294,7 @@ function getFallbackChain(detection: URLDetectionResult): PlayerEngine[] {
 
 - [ ] **Step 2: Run the full test suite to confirm no regression**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test`
+Run: `cd C:/Dev/projects/prism && npm run test`
 Expected: all pre-existing tests pass.
 
 - [ ] **Step 3: Commit**
@@ -464,7 +464,7 @@ describe('TwitchEmbedPlayer', () => {
 
 - [ ] **Step 2: Run the placeholder test**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- TwitchEmbedPlayer`
+Run: `cd C:/Dev/projects/prism && npm run test -- TwitchEmbedPlayer`
 Expected: 1 test passes.
 
 - [ ] **Step 3: Commit**
@@ -781,12 +781,12 @@ export default function TwitchEmbedPlayer({
 
 - [ ] **Step 2: Run the scaffolded tests to confirm no regressions**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- TwitchEmbedPlayer`
+Run: `cd C:/Dev/projects/prism && npm run test -- TwitchEmbedPlayer`
 Expected: placeholder test still passes. (Behavior tests are added in Task 6.)
 
 - [ ] **Step 3: Type-check**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npx tsc --noEmit -p tsconfig.app.json`
+Run: `cd C:/Dev/projects/prism && npx tsc --noEmit -p tsconfig.app.json`
 Expected: no new errors.
 
 - [ ] **Step 4: Commit**
@@ -1024,7 +1024,7 @@ Remove the placeholder `it('placeholder — harness compiles', ...)` and add:
 
 - [ ] **Step 2: Run tests**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- TwitchEmbedPlayer`
+Run: `cd C:/Dev/projects/prism && npm run test -- TwitchEmbedPlayer`
 Expected: all 12 behavior tests pass.
 
 - [ ] **Step 3: Commit**
@@ -1133,7 +1133,7 @@ describe('PlayerHost', () => {
 
 - [ ] **Step 2: Run harness tests**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- PlayerHost`
+Run: `cd C:/Dev/projects/prism && npm run test -- PlayerHost`
 Expected: 2 tests pass.
 
 - [ ] **Step 3: Commit**
@@ -1235,7 +1235,7 @@ Append inside `describe('PlayerHost', ...)`:
 
 - [ ] **Step 2: Run tests to confirm they fail**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- PlayerHost`
+Run: `cd C:/Dev/projects/prism && npm run test -- PlayerHost`
 Expected: the 7 new tests FAIL (`onOffline` is undefined, debug overlay lacks Content ID row, etc.).
 
 - [ ] **Step 3: Replace `src/components/player/PlayerHost.tsx` contents**
@@ -1597,7 +1597,7 @@ export default function PlayerHost({ url, detection }: PlayerHostProps) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test -- PlayerHost`
+Run: `cd C:/Dev/projects/prism && npm run test -- PlayerHost`
 Expected: all 9 PlayerHost tests pass (2 harness + 7 new behavior).
 
 - [ ] **Step 5: Commit**
@@ -1641,7 +1641,7 @@ Run before each manual test session (two terminals):
 
 ```bash
 # Terminal 1 — start Vite
-cd C:/Dev/projects/twitch-glaze-me
+cd C:/Dev/projects/prism
 npm run dev
 
 # Terminal 2 — tunnel Vite to an https URL
@@ -1653,7 +1653,7 @@ in your browser, not `localhost:5173`. Embeds will now receive a matching
 `parent=<random>.trycloudflare.com` and load correctly.
 
 > Alternative: push the branch and test against the GitHub Pages deploy
-> (`https://nooROtic.github.io/twitch-glaze-me/`). Slower iteration.
+> (`https://nooROtic.github.io/prism/`). Slower iteration.
 
 ---
 
@@ -1724,17 +1724,17 @@ rtk git commit -m "docs: manual test checklist + CLAUDE.md PlayerProps interface
 
 - [ ] **Step 1: Run the full test suite**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run test`
+Run: `cd C:/Dev/projects/prism && npm run test`
 Expected: all pre-existing tests (108) + new tests from this plan (~25 added across urlDetection, TwitchEmbedPlayer, PlayerHost) all pass.
 
 - [ ] **Step 2: Run lint**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run lint`
+Run: `cd C:/Dev/projects/prism && npm run lint`
 Expected: clean.
 
 - [ ] **Step 3: Run formatter check**
 
-Run: `cd C:/Dev/projects/twitch-glaze-me && npm run format`
+Run: `cd C:/Dev/projects/prism && npm run format`
 Expected: clean. If changes needed, run `npm run format:fix` and commit.
 
 - [ ] **Step 4: Manual smoke test via cloudflared**

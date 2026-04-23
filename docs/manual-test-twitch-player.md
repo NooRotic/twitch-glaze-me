@@ -20,7 +20,7 @@ Run before each manual test session (two terminals):
 
 ```bash
 # Terminal 1 — start Vite (dev server pinned to port 5000)
-cd C:/Dev/projects/twitch-glaze-me
+cd C:/Dev/projects/prism
 npm run dev
 
 # Terminal 2 — tunnel Vite to an https URL
@@ -32,7 +32,7 @@ in your browser, not `localhost:5000`. Embeds will now receive a matching
 `parent=<random>.trycloudflare.com` and load correctly.
 
 > Alternative: push the branch and test against the GitHub Pages deploy
-> (`https://noorotic.github.io/twitch-glaze-me/`). Slower iteration. Note
+> (`https://noorotic.github.io/prism/`). Slower iteration. Note
 > the lowercase `noorotic` — GitHub Pages normalizes usernames regardless
 > of how they're capitalized in the account.
 
@@ -132,7 +132,7 @@ For each of HLS / DASH / YouTube:
       player reports them" is visible inside the Debug Panel
 - [ ] No console errors
 - [ ] Pause + resume works (manual check via player controls)
-- [ ] Close the tab or navigate home via GLAZE ME — no orphaned network
+- [ ] Close the tab or navigate home via PRISM — no orphaned network
       requests or memory leaks (inspect DevTools Network + Memory)
 
 ## Fallback chain verification

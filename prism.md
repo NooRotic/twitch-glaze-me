@@ -1,4 +1,6 @@
-# Twitch - GLAZE ME / GALZER
+# PRISM — Player Routing & Insight for Streaming Media
+
+> Formerly "Twitch Glaze Me" / "GALZER"
 
 # High level Idea - Twitch Channel Streamer Highlighter
 A hls/dash/twitch/youtube player main focus on 
@@ -31,7 +33,7 @@ Twitch web player that loads twitch user auth and displays their user profile in
 * ask questions to clarify any doubts
 * Borrow color theme and styling
 
-# Goals - Twitch Glaze Me
+# Goals - PRISM
 * Independent repo stand alone
 * we can choose new tech stack better fitting to goals
 * static web hosting to deploy to
