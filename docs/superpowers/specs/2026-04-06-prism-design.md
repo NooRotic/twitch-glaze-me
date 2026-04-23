@@ -1,10 +1,10 @@
-# Twitch Glaze Me — Design Spec
+# PRISM — Design Spec
 
 ## Overview
 
 A standalone Twitch Channel Streamer Highlighter SPA that presents Twitch users in a bold, visually striking way. Focuses on bulletproof video playback and rich channel statistics derived from the Twitch Helix API. Separate from the wsp-skills-portfolio project but reuses proven patterns from it.
 
-**Value prop vs TwitchTracker:** TwitchTracker = spreadsheet for analysts. Glaze Me = visual showcase for fans. We can't match their historical data (they've crawled daily for years) but we beat them on presentation and real-time enrichment.
+**Value prop vs TwitchTracker:** TwitchTracker = spreadsheet for analysts. PRISM = visual showcase for fans. We can't match their historical data (they've crawled daily for years) but we beat them on presentation and real-time enrichment.
 
 ---
 
@@ -33,7 +33,7 @@ Desktop: Player (70% width) + Profile Sidebar (30%) top row. Full-width stats su
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  🎮 GLAZE ME          [🔍 Search channel...]  [Login Twitch]│
+│  🎮 PRISM             [🔍 Search channel...]  [Login Twitch]│
 ├──────────────────────────────────┬──────────────────────────┤
 │                                  │  👤 NooRoticX            │
 │     TWITCH PLAYER (70%)          │  PARTNER                 │
@@ -153,7 +153,7 @@ All player components expose: `{ onReady, onError, onPlay, onPause }`
 
 ### Idle (no channel loaded)
 
-- Hero intro text explaining what Glaze Me does
+- Hero intro text explaining what PRISM does
 - QuickLinks to top Twitch categories
 - Login prompt (optional, app works without auth)
 
@@ -249,9 +249,9 @@ Actions: `LOGIN`, `LOGOUT`, `TOKEN_EXPIRED`, `SET_QUERY`, `LOAD_CHANNEL_START`, 
 
 ### Configuration
 
-- `vite.config.ts`: `base: '/twitch-glaze-me/'` for GitHub Pages sub-path
+- `vite.config.ts`: `base: '/prism/'` for GitHub Pages sub-path
 - GitHub repo secrets: `VITE_TWITCH_CLIENT_ID`
-- Twitch Developer Console: add `https://<username>.github.io/twitch-glaze-me/` and `http://localhost:5173/` as OAuth redirect URLs
+- Twitch Developer Console: add `https://<username>.github.io/prism/` and `http://localhost:5173/` as OAuth redirect URLs
 
 ---
 
