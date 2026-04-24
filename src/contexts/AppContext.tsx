@@ -19,17 +19,38 @@ export interface SearchEntry {
 
 export type NavPanelId = 'following' | 'your-stats' | 'category'
 
-export type FollowingSort = 'live-first' | 'alpha' | 'viewers'
+export type FollowingSortMode = 'live-first' | 'alpha' | 'viewers'
+export type FollowingSortDir = 'asc' | 'desc'
+export interface FollowingSort {
+  mode: FollowingSortMode
+  dir: FollowingSortDir
+}
+
+const SORT_DEFAULTS: Record<FollowingSortMode, FollowingSortDir> = {
+  'live-first': 'desc',
+  alpha: 'asc',
+  viewers: 'desc',
+}
 
 const FOLLOWING_SORT_STORAGE_KEY = 'prism_following_sort'
 
 function loadFollowingSort(): FollowingSort {
-  if (typeof localStorage === 'undefined') return 'live-first'
+  if (typeof localStorage === 'undefined') return { mode: 'live-first', dir: 'desc' }
   const stored = localStorage.getItem(FOLLOWING_SORT_STORAGE_KEY)
+  if (!stored) return { mode: 'live-first', dir: 'desc' }
+  // Handle legacy bare values from before asc/desc toggle
   if (stored === 'live-first' || stored === 'alpha' || stored === 'viewers') {
-    return stored
+    return { mode: stored, dir: SORT_DEFAULTS[stored] }
   }
-  return 'live-first'
+  // New format: "mode:dir"
+  const [mode, dir] = stored.split(':')
+  if (
+    (mode === 'live-first' || mode === 'alpha' || mode === 'viewers') &&
+    (dir === 'asc' || dir === 'desc')
+  ) {
+    return { mode, dir }
+  }
+  return { mode: 'live-first', dir: 'desc' }
 }
 
 export interface AppState {
@@ -275,7 +296,7 @@ function appReducer(state: AppState, action: Action): AppState {
       }
     case 'SET_FOLLOWING_SORT':
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(FOLLOWING_SORT_STORAGE_KEY, action.sort)
+        localStorage.setItem(FOLLOWING_SORT_STORAGE_KEY, `${action.sort.mode}:${action.sort.dir}`)
       }
       return {
         ...state,

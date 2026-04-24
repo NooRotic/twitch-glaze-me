@@ -85,40 +85,52 @@ function enrichFollows(
 }
 
 /**
- * Sort enriched follows by the user's chosen ordering. Live channels
- * always come before offline when the 'live-first' option is used.
+ * Sort enriched follows by the user's chosen ordering. All sort modes
+ * partition live channels above offline, then sort within each group.
  */
 export function sortFollows(
   follows: EnrichedFollow[],
   sort: FollowingSort,
 ): EnrichedFollow[] {
   const copy = [...follows]
+  const dir = sort.dir === 'asc' ? 1 : -1
+
   const byName = (a: EnrichedFollow, b: EnrichedFollow) =>
     a.broadcaster_name.localeCompare(b.broadcaster_name, undefined, {
       sensitivity: 'base',
     })
 
-  switch (sort) {
-    case 'alpha':
-      return copy.sort(byName)
-    case 'viewers':
-      return copy.sort((a, b) => {
-        // Live streams with higher viewer count first; offline last by name
-        if (a.isLive && b.isLive) {
-          return (b.viewerCount ?? 0) - (a.viewerCount ?? 0)
-        }
-        if (a.isLive && !b.isLive) return -1
-        if (!a.isLive && b.isLive) return 1
-        return byName(a, b)
-      })
-    case 'live-first':
-    default:
-      return copy.sort((a, b) => {
-        if (a.isLive && !b.isLive) return -1
-        if (!a.isLive && b.isLive) return 1
-        return byName(a, b)
-      })
+  // Partition: live always above offline
+  const partition = (a: EnrichedFollow, b: EnrichedFollow): number | null => {
+    if (a.isLive && !b.isLive) return -1
+    if (!a.isLive && b.isLive) return 1
+    return null
   }
+
+  return copy.sort((a, b) => {
+    const p = partition(a, b)
+    if (p !== null) return p
+
+    switch (sort.mode) {
+      case 'alpha':
+        return dir * byName(a, b)
+      case 'viewers': {
+        const bothLive = a.isLive && b.isLive
+        if (bothLive) {
+          return dir * ((a.viewerCount ?? 0) - (b.viewerCount ?? 0))
+        }
+        return dir * byName(a, b)
+      }
+      case 'live-first':
+      default: {
+        const bothLive = a.isLive && b.isLive
+        if (bothLive) {
+          return dir * ((a.viewerCount ?? 0) - (b.viewerCount ?? 0))
+        }
+        return byName(a, b)
+      }
+    }
+  })
 }
 
 /**
