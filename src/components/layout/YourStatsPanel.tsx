@@ -4,6 +4,7 @@ import SlidedownPanel from './SlidedownPanel'
 import {
   X,
   Loader2,
+  ChevronDown,
   Users,
   Star,
   Target,
@@ -112,6 +113,33 @@ function StatCard<T>({
         section.data !== null &&
         children(section.data)}
     </div>
+  )
+}
+
+// ─── Show more button ────────────────────────────────────────────────
+
+function ShowMoreButton({
+  onClick,
+  loading,
+}: {
+  onClick: () => void
+  loading: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className="flex items-center justify-center gap-1.5 w-full py-1.5 mt-1 rounded text-xs transition-colors hover:bg-white/5 disabled:opacity-50"
+      style={{ color: 'var(--text-muted)' }}
+    >
+      {loading ? (
+        <Loader2 size={12} className="animate-spin" />
+      ) : (
+        <ChevronDown size={12} />
+      )}
+      {loading ? 'Loading…' : 'Show more'}
+    </button>
   )
 }
 
@@ -260,7 +288,7 @@ function VIPsBody({ vips }: { vips: VIPsBodyData }) {
       </p>
       {vips.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {vips.slice(0, 8).map((v, i) => (
+          {vips.slice(0).map((v, i) => (
             <span
               key={`${v.user_name}-${i}`}
               className="text-[11px] px-1.5 py-0.5 rounded"
@@ -272,14 +300,6 @@ function VIPsBody({ vips }: { vips: VIPsBodyData }) {
               {v.user_name}
             </span>
           ))}
-          {vips.length > 8 && (
-            <span
-              className="text-[11px] px-1.5 py-0.5"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              +{vips.length - 8} more
-            </span>
-          )}
         </div>
       )}
     </div>
@@ -336,139 +356,149 @@ function HypeTrainsBody({ events }: { events: TwitchHypeTrainEvent[] }) {
 }
 
 function PollsBody({ polls }: { polls: TwitchPoll[] }) {
-  const latest = polls[0]
-  if (!latest) {
+  if (polls.length === 0) {
     return (
       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
         No recent polls
       </p>
     )
   }
-  const totalVotes = latest.choices.reduce((sum, c) => sum + c.votes, 0)
-  const sortedChoices = [...latest.choices].sort((a, b) => b.votes - a.votes)
   return (
-    <div className="flex flex-col gap-2">
-      <p
-        className="text-sm font-semibold truncate"
-        style={{ color: 'var(--text-primary)' }}
-        title={latest.title}
-      >
-        {latest.title}
-      </p>
-      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-        {latest.status} · {totalVotes.toLocaleString()} votes
-      </span>
-      <div className="flex flex-col gap-1.5">
-        {sortedChoices.slice(0, 4).map((choice) => {
-          const pct =
-            totalVotes > 0
-              ? Math.round((choice.votes / totalVotes) * 100)
-              : 0
-          return (
-            <div key={choice.id} className="flex flex-col gap-0.5">
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-xs truncate"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {choice.title}
-                </span>
-                <span
-                  className="text-xs shrink-0 ml-2"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {pct}%
-                </span>
-              </div>
-              <div
-                className="w-full h-1 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'var(--bg-card-hover)' }}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: 'var(--accent-green)',
-                  }}
-                />
-              </div>
+    <div className="flex flex-col gap-4">
+      {polls.map((poll) => {
+        const totalVotes = poll.choices.reduce((sum, c) => sum + c.votes, 0)
+        const sortedChoices = [...poll.choices].sort((a, b) => b.votes - a.votes)
+        return (
+          <div key={poll.id} className="flex flex-col gap-2">
+            <p
+              className="text-sm font-semibold truncate"
+              style={{ color: 'var(--text-primary)' }}
+              title={poll.title}
+            >
+              {poll.title}
+            </p>
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              {poll.status} · {totalVotes.toLocaleString()} votes
+            </span>
+            <div className="flex flex-col gap-1.5">
+              {sortedChoices.slice(0, 4).map((choice) => {
+                const pct =
+                  totalVotes > 0
+                    ? Math.round((choice.votes / totalVotes) * 100)
+                    : 0
+                return (
+                  <div key={choice.id} className="flex flex-col gap-0.5">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-xs truncate"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
+                        {choice.title}
+                      </span>
+                      <span
+                        className="text-xs shrink-0 ml-2"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        {pct}%
+                      </span>
+                    </div>
+                    <div
+                      className="w-full h-1 rounded-full overflow-hidden"
+                      style={{ backgroundColor: 'var(--bg-card-hover)' }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: 'var(--accent-green)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
 function PredictionsBody({ predictions }: { predictions: TwitchPrediction[] }) {
-  const latest = predictions[0]
-  if (!latest) {
+  if (predictions.length === 0) {
     return (
       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
         No recent predictions
       </p>
     )
   }
-  const totalPoints = latest.outcomes.reduce(
-    (sum, o) => sum + o.channel_points,
-    0,
-  )
   return (
-    <div className="flex flex-col gap-2">
-      <p
-        className="text-sm font-semibold truncate"
-        style={{ color: 'var(--text-primary)' }}
-        title={latest.title}
-      >
-        {latest.title}
-      </p>
-      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-        {latest.status} · {totalPoints.toLocaleString()} pts staked
-      </span>
-      <div className="flex flex-col gap-1.5">
-        {latest.outcomes.slice(0, 2).map((outcome) => {
-          const pct =
-            totalPoints > 0
-              ? Math.round((outcome.channel_points / totalPoints) * 100)
-              : 0
-          const isWinner = outcome.id === latest.winning_outcome_id
-          const color =
-            outcome.color === 'PINK' ? '#ff6bcb' : 'var(--accent-hls)'
-          return (
-            <div key={outcome.id} className="flex flex-col gap-0.5">
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-xs truncate"
-                  style={{
-                    color: isWinner
-                      ? 'var(--accent-green)'
-                      : 'var(--text-secondary)',
-                    fontWeight: isWinner ? 700 : 400,
-                  }}
-                >
-                  {outcome.title}
-                  {isWinner && ' ✓'}
-                </span>
-                <span
-                  className="text-xs shrink-0 ml-2"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {outcome.users.toLocaleString()} picks
-                </span>
-              </div>
-              <div
-                className="w-full h-1 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'var(--bg-card-hover)' }}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: color }}
-                />
-              </div>
+    <div className="flex flex-col gap-4">
+      {predictions.map((prediction) => {
+        const totalPoints = prediction.outcomes.reduce(
+          (sum, o) => sum + o.channel_points,
+          0,
+        )
+        return (
+          <div key={prediction.id} className="flex flex-col gap-2">
+            <p
+              className="text-sm font-semibold truncate"
+              style={{ color: 'var(--text-primary)' }}
+              title={prediction.title}
+            >
+              {prediction.title}
+            </p>
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              {prediction.status} · {totalPoints.toLocaleString()} pts staked
+            </span>
+            <div className="flex flex-col gap-1.5">
+              {prediction.outcomes.slice(0, 2).map((outcome) => {
+                const pct =
+                  totalPoints > 0
+                    ? Math.round((outcome.channel_points / totalPoints) * 100)
+                    : 0
+                const isWinner = outcome.id === prediction.winning_outcome_id
+                const color =
+                  outcome.color === 'PINK' ? '#ff6bcb' : 'var(--accent-hls)'
+                return (
+                  <div key={outcome.id} className="flex flex-col gap-0.5">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-xs truncate"
+                        style={{
+                          color: isWinner
+                            ? 'var(--accent-green)'
+                            : 'var(--text-secondary)',
+                          fontWeight: isWinner ? 700 : 400,
+                        }}
+                      >
+                        {outcome.title}
+                        {isWinner && ' ✓'}
+                      </span>
+                      <span
+                        className="text-xs shrink-0 ml-2"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        {outcome.users.toLocaleString()} picks
+                      </span>
+                    </div>
+                    <div
+                      className="w-full h-1 rounded-full overflow-hidden"
+                      style={{ backgroundColor: 'var(--bg-card-hover)' }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: color }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -535,11 +565,16 @@ export default function YourStatsPanel() {
     [handleAuthErrorCallback],
   )
 
-  const { stats, loading, sessionError, refetch } = useYourStats(
-    broadcasterId,
-    isStreamer,
-    fetchOptions,
-  )
+  const {
+    stats,
+    loading,
+    sessionError,
+    refetch,
+    loadMoreSubs,
+    loadMoreVIPs,
+    loadMorePolls,
+    loadMorePredictions,
+  } = useYourStats(broadcasterId, isStreamer, fetchOptions)
 
   const close = useCallback(() => {
     dispatch({ type: 'CLOSE_NAV_PANEL' })
@@ -701,7 +736,17 @@ export default function YourStatsPanel() {
                   section={stats.subscribers}
                   emptyMessage="No active subscribers"
                 >
-                  {(data) => <SubscriberBody data={data} />}
+                  {(data) => (
+                    <>
+                      <SubscriberBody data={data} />
+                      {stats.subscribers.cursor && (
+                        <ShowMoreButton
+                          onClick={loadMoreSubs}
+                          loading={stats.subscribers.loadingMore}
+                        />
+                      )}
+                    </>
+                  )}
                 </StatCard>
 
                 <StatCard
@@ -710,7 +755,17 @@ export default function YourStatsPanel() {
                   section={stats.vips}
                   emptyMessage="No VIPs yet"
                 >
-                  {(vips) => <VIPsBody vips={vips} />}
+                  {(vips) => (
+                    <>
+                      <VIPsBody vips={vips} />
+                      {stats.vips.cursor && (
+                        <ShowMoreButton
+                          onClick={loadMoreVIPs}
+                          loading={stats.vips.loadingMore}
+                        />
+                      )}
+                    </>
+                  )}
                 </StatCard>
 
                 <StatCard
@@ -728,7 +783,17 @@ export default function YourStatsPanel() {
                   section={stats.polls}
                   emptyMessage="No recent polls"
                 >
-                  {(polls) => <PollsBody polls={polls} />}
+                  {(polls) => (
+                    <>
+                      <PollsBody polls={polls} />
+                      {stats.polls.cursor && (
+                        <ShowMoreButton
+                          onClick={loadMorePolls}
+                          loading={stats.polls.loadingMore}
+                        />
+                      )}
+                    </>
+                  )}
                 </StatCard>
 
                 <StatCard
@@ -738,7 +803,15 @@ export default function YourStatsPanel() {
                   emptyMessage="No recent predictions"
                 >
                   {(predictions) => (
-                    <PredictionsBody predictions={predictions} />
+                    <>
+                      <PredictionsBody predictions={predictions} />
+                      {stats.predictions.cursor && (
+                        <ShowMoreButton
+                          onClick={loadMorePredictions}
+                          loading={stats.predictions.loadingMore}
+                        />
+                      )}
+                    </>
                   )}
                 </StatCard>
 
