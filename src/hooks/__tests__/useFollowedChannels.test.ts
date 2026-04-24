@@ -28,39 +28,56 @@ describe('sortFollows', () => {
         makeFollow('gamma'),
         makeFollow('delta', { isLive: true }),
       ]
-      const sorted = sortFollows(input, 'live-first')
+      const sorted = sortFollows(input, { mode: 'live-first', dir: 'desc' })
+      const names = sorted.map((f) => f.broadcaster_name)
+      // live must come before offline
+      expect(names.indexOf('beta')).toBeLessThan(names.indexOf('alpha'))
+      expect(names.indexOf('delta')).toBeLessThan(names.indexOf('alpha'))
+      expect(names.indexOf('beta')).toBeLessThan(names.indexOf('gamma'))
+      expect(names.indexOf('delta')).toBeLessThan(names.indexOf('gamma'))
+    })
+
+    it('sorts live channels by viewer count descending within live group', () => {
+      const input = [
+        makeFollow('zulu', { isLive: true, viewerCount: 100 }),
+        makeFollow('alpha', { isLive: true, viewerCount: 500 }),
+        makeFollow('bravo', { isLive: true, viewerCount: 250 }),
+        makeFollow('yankee'),
+      ]
+      const sorted = sortFollows(input, { mode: 'live-first', dir: 'desc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual([
-        'beta',
-        'delta',
         'alpha',
-        'gamma',
+        'bravo',
+        'zulu',
+        'yankee',
       ])
     })
 
-    it('sorts alphabetically within each live/offline group', () => {
+    it('sorts offline channels alphabetically', () => {
       const input = [
-        makeFollow('zulu', { isLive: true }),
+        makeFollow('zulu', { isLive: true, viewerCount: 100 }),
+        makeFollow('charlie'),
         makeFollow('alpha'),
-        makeFollow('bravo', { isLive: true }),
-        makeFollow('yankee'),
+        makeFollow('bravo'),
       ]
-      const sorted = sortFollows(input, 'live-first')
+      const sorted = sortFollows(input, { mode: 'live-first', dir: 'desc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual([
-        'bravo',
         'zulu',
         'alpha',
-        'yankee',
+        'bravo',
+        'charlie',
       ])
     })
 
     it('handles all-live or all-offline sets', () => {
       const allLive = [
-        makeFollow('charlie', { isLive: true }),
-        makeFollow('alpha', { isLive: true }),
-        makeFollow('bravo', { isLive: true }),
+        makeFollow('charlie', { isLive: true, viewerCount: 100 }),
+        makeFollow('alpha', { isLive: true, viewerCount: 300 }),
+        makeFollow('bravo', { isLive: true, viewerCount: 200 }),
       ]
+      // desc: alpha(300) > bravo(200) > charlie(100)
       expect(
-        sortFollows(allLive, 'live-first').map((f) => f.broadcaster_name),
+        sortFollows(allLive, { mode: 'live-first', dir: 'desc' }).map((f) => f.broadcaster_name),
       ).toEqual(['alpha', 'bravo', 'charlie'])
 
       const allOffline = [
@@ -69,7 +86,7 @@ describe('sortFollows', () => {
         makeFollow('bravo'),
       ]
       expect(
-        sortFollows(allOffline, 'live-first').map((f) => f.broadcaster_name),
+        sortFollows(allOffline, { mode: 'live-first', dir: 'desc' }).map((f) => f.broadcaster_name),
       ).toEqual(['alpha', 'bravo', 'charlie'])
     })
 
@@ -79,7 +96,7 @@ describe('sortFollows', () => {
         makeFollow('apple'),
         makeFollow('Banana'),
       ]
-      const sorted = sortFollows(input, 'live-first')
+      const sorted = sortFollows(input, { mode: 'live-first', dir: 'desc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual([
         'apple',
         'Banana',
@@ -89,19 +106,33 @@ describe('sortFollows', () => {
   })
 
   describe('alpha', () => {
-    it('sorts alphabetically regardless of live state', () => {
+    it('sorts live above offline, then alphabetically within each group', () => {
       const input = [
         makeFollow('zulu', { isLive: true }),
         makeFollow('alpha'),
         makeFollow('bravo', { isLive: true }),
         makeFollow('yankee'),
       ]
-      const sorted = sortFollows(input, 'alpha')
+      const sorted = sortFollows(input, { mode: 'alpha', dir: 'asc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual([
-        'alpha',
         'bravo',
-        'yankee',
         'zulu',
+        'alpha',
+        'yankee',
+      ])
+    })
+
+    it('sorts descending (Z-A) with dir=desc', () => {
+      const input = [
+        makeFollow('alpha'),
+        makeFollow('bravo'),
+        makeFollow('charlie'),
+      ]
+      const sorted = sortFollows(input, { mode: 'alpha', dir: 'desc' })
+      expect(sorted.map((f) => f.broadcaster_name)).toEqual([
+        'charlie',
+        'bravo',
+        'alpha',
       ])
     })
   })
@@ -113,23 +144,33 @@ describe('sortFollows', () => {
         makeFollow('b', { isLive: true, viewerCount: 500 }),
         makeFollow('c', { isLive: true, viewerCount: 250 }),
       ]
-      const sorted = sortFollows(input, 'viewers')
+      const sorted = sortFollows(input, { mode: 'viewers', dir: 'desc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual(['b', 'c', 'a'])
     })
 
-    it('puts live channels before offline, live by viewers then offline alpha', () => {
+    it('puts live channels before offline, live by viewers desc then offline alpha asc', () => {
       const input = [
         makeFollow('offline-b'),
         makeFollow('live-small', { isLive: true, viewerCount: 10 }),
         makeFollow('offline-a'),
         makeFollow('live-big', { isLive: true, viewerCount: 1000 }),
       ]
-      const sorted = sortFollows(input, 'viewers')
-      expect(sorted.map((f) => f.broadcaster_name)).toEqual([
-        'live-big',
+      // dir=asc: live sorted asc by viewers (small first), offline sorted asc by name
+      const sortedAsc = sortFollows(input, { mode: 'viewers', dir: 'asc' })
+      expect(sortedAsc.map((f) => f.broadcaster_name)).toEqual([
         'live-small',
+        'live-big',
         'offline-a',
         'offline-b',
+      ])
+
+      // dir=desc: live sorted desc by viewers (big first), offline sorted desc by name (b before a)
+      const sortedDesc = sortFollows(input, { mode: 'viewers', dir: 'desc' })
+      expect(sortedDesc.map((f) => f.broadcaster_name)).toEqual([
+        'live-big',
+        'live-small',
+        'offline-b',
+        'offline-a',
       ])
     })
 
@@ -139,7 +180,7 @@ describe('sortFollows', () => {
         makeFollow('b', { isLive: true }),
         makeFollow('c', { isLive: true, viewerCount: 50 }),
       ]
-      const sorted = sortFollows(input, 'viewers')
+      const sorted = sortFollows(input, { mode: 'viewers', dir: 'desc' })
       expect(sorted.map((f) => f.broadcaster_name)).toEqual(['a', 'c', 'b'])
     })
   })
@@ -150,13 +191,13 @@ describe('sortFollows', () => {
       makeFollow('alpha'),
     ]
     const before = [...input]
-    sortFollows(input, 'alpha')
+    sortFollows(input, { mode: 'alpha', dir: 'asc' })
     expect(input).toEqual(before)
   })
 
   it('returns an empty array for an empty input', () => {
-    expect(sortFollows([], 'live-first')).toEqual([])
-    expect(sortFollows([], 'alpha')).toEqual([])
-    expect(sortFollows([], 'viewers')).toEqual([])
+    expect(sortFollows([], { mode: 'live-first', dir: 'desc' })).toEqual([])
+    expect(sortFollows([], { mode: 'alpha', dir: 'asc' })).toEqual([])
+    expect(sortFollows([], { mode: 'viewers', dir: 'desc' })).toEqual([])
   })
 })

@@ -400,20 +400,19 @@ describe('AppContext', () => {
 
     it('SET_FOLLOWING_SORT updates the sort and persists to localStorage', () => {
       const { result } = renderHook(() => useApp(), { wrapper })
-      // Initial value comes from the localStorage loader; default 'live-first'
-      expect(result.current.state.navPanel.followingSort).toBe('live-first')
+      expect(result.current.state.navPanel.followingSort).toEqual({ mode: 'live-first', dir: 'desc' })
 
       act(() => {
-        result.current.dispatch({ type: 'SET_FOLLOWING_SORT', sort: 'viewers' })
+        result.current.dispatch({ type: 'SET_FOLLOWING_SORT', sort: { mode: 'viewers', dir: 'desc' } })
       })
-      expect(result.current.state.navPanel.followingSort).toBe('viewers')
-      expect(localStorage.getItem('prism_following_sort')).toBe('viewers')
+      expect(result.current.state.navPanel.followingSort).toEqual({ mode: 'viewers', dir: 'desc' })
+      expect(localStorage.getItem('prism_following_sort')).toBe('viewers:desc')
 
       act(() => {
-        result.current.dispatch({ type: 'SET_FOLLOWING_SORT', sort: 'alpha' })
+        result.current.dispatch({ type: 'SET_FOLLOWING_SORT', sort: { mode: 'alpha', dir: 'asc' } })
       })
-      expect(result.current.state.navPanel.followingSort).toBe('alpha')
-      expect(localStorage.getItem('prism_following_sort')).toBe('alpha')
+      expect(result.current.state.navPanel.followingSort).toEqual({ mode: 'alpha', dir: 'asc' })
+      expect(localStorage.getItem('prism_following_sort')).toBe('alpha:asc')
     })
 
     it('GO_HOME closes any open nav panel', () => {

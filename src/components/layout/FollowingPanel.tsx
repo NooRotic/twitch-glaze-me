@@ -5,12 +5,12 @@ import {
   useFollowedChannels,
   sortFollows,
 } from '../../hooks/useFollowedChannels'
-import type { FollowingSort } from '../../contexts/AppContext'
+import type { FollowingSort, FollowingSortMode } from '../../contexts/AppContext'
 import FollowedChannelCard from './FollowedChannelCard'
 import { useTwitchAuth } from '../../hooks/useTwitchAuth'
 import SlidedownPanel from './SlidedownPanel'
 
-const SORT_OPTIONS: { id: FollowingSort; label: string }[] = [
+const SORT_OPTIONS: { id: FollowingSortMode; label: string }[] = [
   { id: 'live-first', label: 'Live first' },
   { id: 'alpha', label: 'Alphabetical' },
   { id: 'viewers', label: 'Most viewers' },
@@ -48,11 +48,23 @@ export default function FollowingPanel() {
   }, [dispatch])
 
   const setSort = useCallback(
-    (next: FollowingSort) => {
-      dispatch({ type: 'SET_FOLLOWING_SORT', sort: next })
+    (mode: FollowingSortMode) => {
+      const defaults: Record<FollowingSortMode, 'asc' | 'desc'> = {
+        'live-first': 'desc',
+        alpha: 'asc',
+        viewers: 'desc',
+      }
+      dispatch({ type: 'SET_FOLLOWING_SORT', sort: { mode, dir: defaults[mode] } })
     },
     [dispatch],
   )
+
+  const toggleDir = useCallback(() => {
+    dispatch({
+      type: 'SET_FOLLOWING_SORT',
+      sort: { mode: sort.mode, dir: sort.dir === 'asc' ? 'desc' : 'asc' },
+    })
+  }, [dispatch, sort])
 
   return (
     <SlidedownPanel panelId="following" ariaLabel="Following panel">
@@ -117,7 +129,7 @@ export default function FollowingPanel() {
             Sort:
           </span>
           {SORT_OPTIONS.map((opt) => {
-            const active = sort === opt.id
+            const active = sort.mode === opt.id
             return (
               <button
                 key={opt.id}
@@ -139,6 +151,20 @@ export default function FollowingPanel() {
               </button>
             )
           })}
+          <button
+            type="button"
+            onClick={toggleDir}
+            className="px-2 py-1 rounded-full text-xs font-bold transition-all"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-secondary)',
+            }}
+            aria-label={sort.dir === 'asc' ? 'Sort ascending' : 'Sort descending'}
+            title={sort.dir === 'asc' ? 'Ascending' : 'Descending'}
+          >
+            {sort.dir === 'asc' ? '▲' : '▼'}
+          </button>
         </div>
       )}
 
