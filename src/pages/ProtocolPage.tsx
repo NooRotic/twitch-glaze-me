@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { DemoGrid } from '../components/grid/DemoGrid'
+import { YouTubeGrid } from '../components/grid/YouTubeGrid'
 import { SmartUrlInput } from '../components/search/SmartUrlInput'
 import { useTwitchAuth } from '../hooks/useTwitchAuth'
 import { getDemoByProtocol, getHlsDashDemo, PROTOCOL_META, type ProtocolKey } from '../config/demoContent'
@@ -218,8 +219,12 @@ export default function ProtocolPage({ protocol }: ProtocolPageProps) {
           </span>
         </div>
 
-        {/* Demo content grid */}
-        <DemoGrid entries={entries} columns={3} />
+        {/* Content grid — YouTube uses live API data, others use static demo entries */}
+        {protocol === 'youtube' ? (
+          <YouTubeGrid />
+        ) : (
+          <DemoGrid entries={entries} columns={3} />
+        )}
       </div>
     </div>
   )
