@@ -1,6 +1,7 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useApp } from '../../contexts/AppContext'
 import type { NavPanelId } from '../../contexts/AppContext'
+import ChannelSearchDropdown from '../search/ChannelSearchDropdown'
 
 interface NavItem {
   id: NavPanelId
@@ -21,13 +22,23 @@ const NAV_ITEMS: NavItem[] = [
 export default function HeaderNav() {
   const { state, dispatch } = useApp()
   const openPanel = state.navPanel.open
+  const [browseOpen, setBrowseOpen] = useState(false)
 
   const toggle = useCallback(
     (id: NavPanelId) => {
+      setBrowseOpen(false)
       dispatch({ type: 'TOGGLE_NAV_PANEL', panel: id })
     },
     [dispatch],
   )
+
+  const toggleBrowse = useCallback(() => {
+    // Close any open nav panel when Browse opens
+    dispatch({ type: 'CLOSE_NAV_PANEL' })
+    setBrowseOpen((prev) => !prev)
+  }, [dispatch])
+
+  const closeBrowse = useCallback(() => setBrowseOpen(false), [])
 
   return (
     <nav
@@ -62,6 +73,31 @@ export default function HeaderNav() {
           </button>
         )
       })}
+
+      {/* Browse button + dropdown */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={toggleBrowse}
+          aria-expanded={browseOpen}
+          className="px-3 py-1.5 rounded-md transition-all duration-150"
+          style={{
+            color: browseOpen
+              ? 'var(--accent-twitch)'
+              : 'var(--text-secondary)',
+            backgroundColor: browseOpen
+              ? 'rgba(145, 70, 255, 0.1)'
+              : 'transparent',
+            border: `1px solid ${browseOpen ? 'var(--accent-twitch)' : 'transparent'}`,
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.75rem',
+            letterSpacing: '0.05em',
+          }}
+        >
+          Browse
+        </button>
+        <ChannelSearchDropdown open={browseOpen} onClose={closeBrowse} />
+      </div>
     </nav>
   )
 }
