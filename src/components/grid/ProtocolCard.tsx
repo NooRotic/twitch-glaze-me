@@ -43,7 +43,7 @@ export function ProtocolCard({ protocol, count }: ProtocolCardProps) {
 
         {/* Count */}
         <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
-          {count} demo {count === 1 ? 'source' : 'sources'}
+          {count > 0 ? `${count} demo ${count === 1 ? 'source' : 'sources'}` : 'Live browsing'}
         </span>
       </div>
     </Link>
