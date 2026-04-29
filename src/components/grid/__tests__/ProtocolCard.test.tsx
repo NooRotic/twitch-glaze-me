@@ -16,10 +16,19 @@ describe('ProtocolCard', () => {
   it('uses singular for count of 1', () => {
     render(
       <MemoryRouter>
-        <ProtocolCard protocol="youtube" count={1} />
+        <ProtocolCard protocol="hls-dash" count={1} />
       </MemoryRouter>,
     )
     expect(screen.getByText('1 demo source')).toBeInTheDocument()
+  })
+
+  it('shows "Live browsing" when count is 0', () => {
+    render(
+      <MemoryRouter>
+        <ProtocolCard protocol="youtube" count={0} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Live browsing')).toBeInTheDocument()
   })
 
   it('renders description', () => {
